@@ -33,12 +33,27 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v3
 
-
-      - name: Add ArgoCD Helm Repo
-        run: helm repo add argo https://argoproj.github.io/argo-helm && helm repo update
+      - name: Add Helm Repos
+        run: |
+          helm repo add argo https://argoproj.github.io/argo-helm
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo update
 
       - name: Install ArgoCD
         run: |
           helm upgrade --install argocd argo/argo-cd \
           --namespace argocd --create-namespace \
           -f helm/argocd-values.yaml
+
+      - name: Deploy ArgoCD Ingress Resources
+        run: |
+          kubectl apply -f manifests/argocd-http-ingress.yaml
+          kubectl apply -f manifests/dummy-ingress.yaml
+
+      - name: Install NGINX Ingress Controller
+        run: |
+          helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+            --namespace ingress-nginx --create-namespace \
+            --set controller.service.type=LoadBalancer \
+            --set controller.service.externalTrafficPolicy=Local \
+            --set controller.service.healthCheckNodePort=32567

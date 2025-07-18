@@ -56,3 +56,13 @@ Username: admin
 
 Password: (output of above command)
 
+
+
+## Nginx-Ingress controller setup
+
+
+kubectl apply -f argocd-http-ingress.yaml
+
+kubectl apply -f dummy-ingress.yaml
+
+helm upgrade ingress-nginx ingress-nginx/ingress-nginx   --namespace ingress-nginx   --set controller.service.type=LoadBalancer   --set controller.service.externalTrafficPolicy=Local   --set controller.service.healthCheckNodePort=32567
