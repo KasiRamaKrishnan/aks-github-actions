@@ -1,97 +1,58 @@
-Personal AKS + ArgoCD GitOps Automation 🚀
-✅ Overview
-This project automates:
+# 🟣 Personal AKS + ArgoCD GitOps Setup 🚀
 
-🎉 AKS Cluster creation via GitHub Actions
+## ✅ Overview
+This repository automates:
+- ✅ Azure AKS cluster creation using GitHub Actions
+- ✅ ArgoCD installation via Helm
+- ✅ Application deployment using GitOps with ArgoCD
+- ✅ AKS cluster deletion to save daily costs
 
-🎉 ArgoCD installation via Helm
+---
 
-🎉 GitOps Application deployment via ArgoCD
+## 📁 Project Structure
+├── .github/workflows/ # GitHub Actions (create-aks.yml, delete-aks.yml)
+├── helm/ # ArgoCD values.yaml
+├── manifests/ # ArgoCD GitOps Application manifest
+└── README.md # This file
 
-🎉 Easy deletion of AKS to avoid costs
 
-📁 Folder Structure
-graphql
-Copy
-Edit
-.
-├── .github/workflows/           # GitHub Actions for create & delete AKS
-├── helm/                        # ArgoCD Helm chart values
-├── manifests/                   # ArgoCD GitOps app definitions
-└── README.md                    # This file
-⚙️ Pre-requisites
-✅ Azure subscription
+---
 
-✅ GitHub repository with these files
+## ⚙️ Prerequisites
+- Azure Subscription
+- GitHub Repository (this project)
+- GitHub Secrets configured:
+  - `AZURE_CREDENTIALS` – Azure Service Principal credentials (JSON output from az ad sp create-for-rbac --sdk-auth)
+  - `RESOURCE_GROUP` – Resource Group for AKS
+  - `CLUSTER_NAME` – AKS Cluster Name
+  - `LOCATION` – Azure region (e.g., southindia)
 
-✅ GitHub Secrets configured:
+---
 
-AZURE_CREDENTIALS (SP JSON)
+## 🚀 Usage Guide
 
-RESOURCE_GROUP
+### ✅ 1. Create AKS + Install ArgoCD
+- Trigger `create-aks.yml` from GitHub Actions → Run Workflow
+- This will:
+  - Create AKS Cluster
+  - Install ArgoCD via Helm
+  - Deploy applications using ArgoCD GitOps
 
-CLUSTER_NAME
+---
 
-LOCATION (e.g., southindia)
+### ✅ 2. Access ArgoCD UI
 
-🚀 AKS & ArgoCD Deployment Steps
-1. Create AKS and Deploy ArgoCD
-Go to GitHub → Actions → Run Workflow on create-aks.yml
-
-It will:
-✅ Create AKS
-✅ Install ArgoCD via Helm
-✅ Deploy GitOps applications via ArgoCD
-
-2. Access ArgoCD UI
-🔵 If LoadBalancer Service:
-bash
-Copy
-Edit
+#### Option A: **If LoadBalancer Service is used**
+```bash
 kubectl -n argocd get svc argocd-server
-✅ Access via https://<external-ip>
 
-🔵 If ClusterIP (Default):
-bash
-Copy
-Edit
-kubectl port-forward svc/argocd-server -n argocd 8080:443
-✅ Access via https://localhost:8080
+Open browser: https://<EXTERNAL-IP>
 
-🔑 Get ArgoCD Admin Password:
-bash
-Copy
-Edit
-kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath="{.data.password}" | base64 -d
-✅ Username: admin
-✅ Password: (output above)
 
-3. Delete AKS Cluster
-Go to GitHub → Actions → Run Workflow on delete-aks.yml
+### ArgoCD Login Credentials:
 
-✅ This will delete AKS and avoid costs.
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+Username: admin
 
-🟢 Bonus Commands (Local Setup)
-Get Kubeconfig in WSL:
+Password: (output of above command)
 
-bash
-Copy
-Edit
-az aks get-credentials --resource-group <rg> --name <aks-name> --overwrite-existing
-For WSL:
-
-bash
-Copy
-Edit
-export KUBECONFIG=/mnt/c/Users/<your-user>/.kube/config
-📌 Notes
-Port-forwarding is simplest for local testing.
-
-You can optionally configure Ingress + DNS (argocd.kasi.com) for custom domains.
-
-🎉 Summary
-✅ Automated AKS creation
-✅ ArgoCD GitOps deployments
-✅ Easy cost-saving via on-demand cluster deletion
-✅ Clean, simple setup!
