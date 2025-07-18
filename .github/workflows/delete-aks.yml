@@ -1,0 +1,21 @@
+name: Delete AKS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Delete AKS Cluster
+        run: |
+          az aks delete --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.CLUSTER_NAME }} --yes --no-wait
+
+      - name: Delete Resource Group
+        run: |
+          az group delete --name ${{ secrets.RESOURCE_GROUP }} --yes --no-wait

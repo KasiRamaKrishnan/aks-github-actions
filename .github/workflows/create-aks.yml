@@ -1,0 +1,44 @@
+name: Create AKS and Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create Resource Group
+        run: |
+          az group create --name ${{ secrets.RESOURCE_GROUP }} --location ${{ secrets.LOCATION }}
+
+      - name: Create AKS Cluster
+        run: |
+          az aks create --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.CLUSTER_NAME }} \
+          --node-count 1 --enable-managed-identity --generate-ssh-keys
+
+      - name: Get AKS Credentials
+        run: az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} --name ${{ secrets.CLUSTER_NAME }} --overwrite-existing
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+
+      - name: Add ArgoCD Helm Repo
+        run: helm repo add argo https://argoproj.github.io/argo-helm && helm repo update
+
+      - name: Install ArgoCD
+        run: |
+          helm upgrade --install argocd argo/argo-cd \
+          --namespace argocd --create-namespace \
+          -f helm/argocd-values.yaml
