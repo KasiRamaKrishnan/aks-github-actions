@@ -33,7 +33,7 @@ jobs:
           kubectl rollout status deployment cert-manager -n cert-manager --timeout=180s
 
       - name: Apply Let’s Encrypt ClusterIssuer
-        run: kubectl apply -f manifests/letsencrypt-prod.yaml
+        run: kubectl apply -f manifests/clusterissuer.yaml
 
       - name: Patch ArgoCD Ingress with TLS
         run: kubectl apply -f manifests/argocd-ingress.yaml
@@ -46,7 +46,7 @@ jobs:
         run: |
           kubectl patch configmap argocd-cm -n argocd --type merge --patch "
           data:
-            url: https://argocd-kasi.southindia.cloudapp.azure.com
+            url: https://argo-kasi.southindia.cloudapp.azure.com
             oidc.config: |
               name: AzureAD
               issuer: https://login.microsoftonline.com/${TENANT_ID}/v2.0
