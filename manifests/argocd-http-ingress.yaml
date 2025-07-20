@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: argocd-kasi.southindia.cloudapp.azure.com
+  - host: argo-kasi.southindia.cloudapp.azure.com
     http:
       paths:
       - path: /
