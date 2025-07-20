@@ -1,0 +1,63 @@
+name: Configure ArgoCD HTTPS and Azure SSO
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-https-sso:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get AKS Credentials
+        run: |
+          az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP }} \
+          --name ${{ secrets.CLUSTER_NAME }} --overwrite-existing
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Install Cert-Manager
+        run: |
+          kubectl apply --validate=false -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.5/cert-manager.yaml
+          kubectl rollout status deployment cert-manager -n cert-manager --timeout=180s
+
+      - name: Apply Let’s Encrypt ClusterIssuer
+        run: kubectl apply -f manifests/letsencrypt-prod.yaml
+
+      - name: Patch ArgoCD Ingress with TLS
+        run: kubectl apply -f manifests/argocd-ingress.yaml
+
+      - name: Update ArgoCD ConfigMap with OIDC and URL
+        env:
+          TENANT_ID: ${{ secrets.TENANT_ID }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+        run: |
+          kubectl patch configmap argocd-cm -n argocd --type merge --patch "
+          data:
+            url: https://argocd-kasi.southindia.cloudapp.azure.com
+            oidc.config: |
+              name: AzureAD
+              issuer: https://login.microsoftonline.com/${TENANT_ID}/v2.0
+              clientID: ${CLIENT_ID}
+              clientSecret: ${CLIENT_SECRET}
+              requestedScopes: [\"openid\", \"profile\", \"email\"]
+          "
+
+
+      - name: Restart ArgoCD Server Deployment
+        run: kubectl rollout restart deployment argocd-server -n argocd
+
+      - name: Confirm ArgoCD Restarted Successfully
+        run: kubectl rollout status deployment argocd-server -n argocd --timeout=120s
