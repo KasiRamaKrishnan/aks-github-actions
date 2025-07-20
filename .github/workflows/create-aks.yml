@@ -78,16 +78,16 @@ jobs:
           fi
           echo "ip=$IP" >> $GITHUB_OUTPUT
 
-      - name: Configure DNS Record for ArgoCD
+      - name: Get Public IP Name
+        id: public_ip
         run: |
-          az network dns record-set a create \
-            --resource-group ${{ secrets.DNS_RESOURCE_GROUP }} \
-            --zone-name ${{ secrets.DNS_ZONE_NAME }} \
-            --name "argocd-kasi" \
-            --ttl 300
+          IP_NAME=$(az network public-ip list --resource-group "MC_${{ secrets.RESOURCE_GROUP }}_${{ secrets.CLUSTER_NAME }}_${{ secrets.LOCATION }}" \
+            --query "[?ipAddress!=null] | [?dnsSettings.domainNameLabel==null] | [0].name" -o tsv)
+          echo "public_ip_name=$IP_NAME" >> $GITHUB_OUTPUT
 
-          az network dns record-set a add-record \
-            --resource-group ${{ secrets.DNS_RESOURCE_GROUP }} \
-            --zone-name ${{ secrets.DNS_ZONE_NAME }} \
-            --record-set-name "argocd-kasi" \
-            --ipv4-address ${{ steps.get_ip.outputs.ip }}
+      - name: Assign DNS Label
+        run: |
+          az network public-ip update \
+            --resource-group "MC_${{ secrets.RESOURCE_GROUP }}_${{ secrets.CLUSTER_NAME }}_${{ secrets.LOCATION }}" \
+            --name ${{ steps.public_ip.outputs.public_ip_name }} \
+            --dns-name argocd-kasi
