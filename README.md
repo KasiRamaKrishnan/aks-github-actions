@@ -40,14 +40,22 @@ This repository automates:
 
 ---
 
-### ✅ 2. Access ArgoCD UI
-
-#### Option A: **If LoadBalancer Service is used**
+### ✅ 2. AKS login ArgoCD UI
 ```bash
-kubectl -n argocd get svc argocd-server
+az aks get-credentials --resource-group kasi-rg --name kasiNewAks --overwrite-existing
+cp /mnt/c/Users/kumar/.kube/config ~/.kube/config
 
-Open browser: https://<EXTERNAL-IP>
 
+---
+
+### ✅ 3. Access ArgoCD UI
+
+
+kubectl -n argocd get svc ingress-nginx
+
+Get the External-IP from the ouput of ingress-controller and check the same in Azure RG and configure the DNS for that Public IP resource and save it
+
+Eg., http://argocd-kasi.southindia.cloudapp.azure.com/
 
 ### ArgoCD Login Credentials:
 
@@ -56,13 +64,3 @@ Username: admin
 
 Password: (output of above command)
 
-
-
-## Nginx-Ingress controller setup
-
-
-kubectl apply -f argocd-http-ingress.yaml
-
-kubectl apply -f dummy-ingress.yaml
-
-helm upgrade ingress-nginx ingress-nginx/ingress-nginx   --namespace ingress-nginx   --set controller.service.type=LoadBalancer   --set controller.service.externalTrafficPolicy=Local   --set controller.service.healthCheckNodePort=32567
