@@ -57,3 +57,37 @@ jobs:
       - name: Apply ArgoCD Ingress Route
         run: |
           kubectl apply -f manifests/argocd-http-ingress.yaml
+
+      - name: Get Ingress Controller Public IP
+        id: get_ip
+        run: |
+          IP=""
+          for i in {1..20}; do
+            IP=$(kubectl get svc ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            if [ -n "$IP" ]; then
+              echo "Public IP found: $IP"
+              break
+            else
+              echo "Waiting for LoadBalancer IP..."
+              sleep 15
+            fi
+          done
+          if [ -z "$IP" ]; then
+            echo "Public IP not found after waiting. Exiting..."
+            exit 1
+          fi
+          echo "ip=$IP" >> $GITHUB_OUTPUT
+
+      - name: Configure DNS Record for ArgoCD
+        run: |
+          az network dns record-set a create \
+            --resource-group ${{ secrets.DNS_RESOURCE_GROUP }} \
+            --zone-name ${{ secrets.DNS_ZONE_NAME }} \
+            --name "argocd-kasi" \
+            --ttl 300
+
+          az network dns record-set a add-record \
+            --resource-group ${{ secrets.DNS_RESOURCE_GROUP }} \
+            --zone-name ${{ secrets.DNS_ZONE_NAME }} \
+            --record-set-name "argocd-kasi" \
+            --ipv4-address ${{ steps.get_ip.outputs.ip }}
