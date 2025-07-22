@@ -10,10 +10,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - argo-kasi.southindia.cloudapp.azure.com
+        - argocd-kasi.southindia.cloudapp.azure.com
       secretName: argocd-tls
   rules:
-    - host: argo-kasi.southindia.cloudapp.azure.com
+    - host: argocd-kasi.southindia.cloudapp.azure.com
       http:
         paths:
           - path: /

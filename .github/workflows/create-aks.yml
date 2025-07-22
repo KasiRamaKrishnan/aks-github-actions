@@ -90,4 +90,4 @@ jobs:
           az network public-ip update \
             --resource-group "MC_${{ secrets.RESOURCE_GROUP }}_${{ secrets.CLUSTER_NAME }}_${{ secrets.LOCATION }}" \
             --name ${{ steps.public_ip.outputs.public_ip_name }} \
-            --dns-name argo-kasi
+            --dns-name argocd-kasi

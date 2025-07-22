@@ -46,7 +46,7 @@ jobs:
         run: |
           kubectl patch configmap argocd-cm -n argocd --type merge --patch "
           data:
-            url: https://argo-kasi.southindia.cloudapp.azure.com
+            url: https://argocd-kasi.southindia.cloudapp.azure.com
             oidc.config: |
               name: AzureAD
               issuer: https://login.microsoftonline.com/${TENANT_ID}/v2.0
